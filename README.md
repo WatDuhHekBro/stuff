@@ -1,5 +1,7 @@
-# Programming Challenges
+# Stuff
 
-A collection of code I've written for programming challenges.
+A collection of various mini-repos that aren't big enough to warrant having their own dedicated repos. Examples include test code (doubling as references) and various programming challenges.
 
-- [Advent of Code 2022](aoc2022)
+# References
+
+This section will contain which stuff is useful to reference in the future.
