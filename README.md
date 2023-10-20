@@ -5,3 +5,4 @@ A collection of various mini-repos that aren't big enough to warrant having thei
 # References
 
 This section will contain which stuff is useful to reference in the future.
+- **p4g-battle-renamer:** Example of Rust `setInterval` equivalent
