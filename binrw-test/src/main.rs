@@ -1,4 +1,4 @@
-use binrw::{binrw, io::Cursor, BinRead, BinWrite, BinWriterExt};
+use binrw::{binrw, io::Cursor, BinRead, BinResult, BinWrite, BinWriterExt};
 use encoding::{all::ASCII, DecoderTrap, EncoderTrap, Encoding};
 use std::fmt;
 
@@ -82,14 +82,34 @@ struct LcfMapUnit {
 #[derive(Debug)]
 #[binrw]
 #[brw(little)]
-struct LcfMapUnitHeader {
+enum LcfMapUnitHeader {
+    #[br(magic = 1u8)]
+    Test(LcfMapUnitHeaderTest),
+    // Enums can also have a generic fallback value
+    Generic(LcfMapUnitHeaderGeneric),
+}
+
+#[derive(Debug)]
+#[binrw]
+#[brw(little)]
+struct LcfMapUnitHeaderTest {
+    size: u8,
+    value: u8,
+}
+
+#[derive(Debug)]
+#[binrw]
+#[brw(little)]
+struct LcfMapUnitHeaderGeneric {
     id: u8,
     size: u8,
     value: u8,
 }
 
 fn main() {
-    let mut reader = Cursor::new(include_bytes!("../Map0134.lmu"));
+    let mut reader = Cursor::new(include_bytes!(
+        "/home/watduhhekbro/external/workspace/Map0134.lmu"
+    ));
     let servers = LcfMapUnit::read(&mut reader).unwrap();
     println!("{servers:?}\n");
 
@@ -127,14 +147,17 @@ fn main() {
     // The map_stream/stream combo iterates over every byte of Test, but not TestParent.
     TestParent {
         version: 42069,
-        yeet: Test { a: 0x201, b: 0x403 },
+        blank: 69,
+        yeet: Test {
+            values: TestValues { a: 0x201, b: 0x403 },
+        },
     }
     .write(&mut out)
     .unwrap();
     println!("\n{:?}", out.into_inner());
 }
 
-use binrw::{parser, writer, BinResult};
+//use binrw::{parser, writer};
 
 // The only example use of map_stream and stream is from a unit test
 // https://github.com/jam1garner/binrw/blob/master/binrw/tests/derive/write/stream.rs
@@ -159,10 +182,13 @@ impl<T> Checksum<T> {
 
 impl<T: Write> Write for Checksum<T> {
     fn write(&mut self, buf: &[u8]) -> binrw::io::Result<usize> {
+        println!("\nBuffer::write() = {buf:?}");
         for b in buf {
             print!("0x{b:X} ");
             //self.check += 1;
-            self.check += b;
+            self.check += 10;
+            //self.check += b;
+            print!("0x{b:X} ");
         }
         self.inner.write(buf)
         //self.inner.write(&[0x0F])
@@ -180,19 +206,31 @@ impl<T: Seek> Seek for Checksum<T> {
 }
 
 #[binrw::binwrite]
-#[bw(little, stream = writer, map_stream = Checksum::new)]
+#[bw(little, stream = writer, map_stream = Checksum::new, import(seek: i64))]
 struct Test {
+    #[bw(restore_position)]
+    values: TestValues,
+    // Maybe pass the byte length check as a parameter to its parent?
+    #[bw(calc(writer.check()), seek_before = binrw::io::SeekFrom::Current(seek))]
+    c: u8,
+}
+
+#[binrw::binwrite]
+#[bw(little)]
+struct TestValues {
     a: u16,
     b: u16,
-    // Maybe pass the byte length check as a parameter to its parent?
-    #[bw(calc(writer.check()))]
-    c: u8,
 }
 
 #[binrw::binwrite]
 #[bw(little)]
 struct TestParent {
     version: u32,
+    // The parent will hold the byte length, initially just zeroes. If you add the "blank" parameter in the child, it'll be counted in the bytes.
+    // Using a custom number parser variant (dynamic number + # of bytes for that number), two numbers will be read, the 2nd will be sent as an argument.
+    blank: u8,
+    // The child will then overwrite some of the parent's bytes in a controlled manner.
+    #[bw(args(-1))]
     yeet: Test,
 }
 
@@ -205,7 +243,9 @@ for byte in 0u8..=255 {
 println!("];");
 */
 
-#[parser(reader, endian)]
+// Custom parser fucntions are too verbose if it's not a one-off instance.
+
+/*#[parser(reader, endian)]
 fn read_string() -> BinResult<String> {
     let mut output = String::new();
     let count = <u8>::read_options(reader, endian, ())?;
@@ -231,7 +271,7 @@ fn write_string(input: &String) -> BinResult<()> {
     }
 
     Ok(())
-}
+}*/
 
 use binrw::{
     io::{Read, Seek, Write},
