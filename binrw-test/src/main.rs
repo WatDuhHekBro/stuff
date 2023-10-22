@@ -71,7 +71,28 @@ impl fmt::Display for TerrariaServerList {
     }
 }
 
+#[derive(Debug)]
+#[binrw]
+#[brw(little, magic = b"\x0ALcfMapUnit")]
+struct LcfMapUnit {
+    #[br(count = 10)]
+    headers: Vec<LcfMapUnitHeader>,
+}
+
+#[derive(Debug)]
+#[binrw]
+#[brw(little)]
+struct LcfMapUnitHeader {
+    id: u8,
+    size: u8,
+    value: u8,
+}
+
 fn main() {
+    let mut reader = Cursor::new(include_bytes!("../Map0134.lmu"));
+    let servers = LcfMapUnit::read(&mut reader).unwrap();
+    println!("{servers:?}\n");
+
     let file = TERRARIA_SERVER_LIST;
     println!("{file:?}\n");
 
@@ -140,9 +161,11 @@ impl<T: Write> Write for Checksum<T> {
     fn write(&mut self, buf: &[u8]) -> binrw::io::Result<usize> {
         for b in buf {
             print!("0x{b:X} ");
+            //self.check += 1;
             self.check += b;
         }
         self.inner.write(buf)
+        //self.inner.write(&[0x0F])
     }
 
     fn flush(&mut self) -> binrw::io::Result<()> {
@@ -161,6 +184,7 @@ impl<T: Seek> Seek for Checksum<T> {
 struct Test {
     a: u16,
     b: u16,
+    // Maybe pass the byte length check as a parameter to its parent?
     #[bw(calc(writer.check()))]
     c: u8,
 }
