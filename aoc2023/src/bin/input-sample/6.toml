@@ -1,0 +1,15 @@
+[main]
+time = 71530
+distance = 940200
+
+[[races]]
+time = 7
+distance = 9
+
+[[races]]
+time = 15
+distance = 40
+
+[[races]]
+time = 30
+distance = 200
