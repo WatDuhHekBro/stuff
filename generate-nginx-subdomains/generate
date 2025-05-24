@@ -1,0 +1,83 @@
+#!/bin/python
+import tomllib as toml
+
+data = toml.load(open("subdomains.toml", "rb"))
+output = ""
+output += "##########################################\n"
+output += "# Subdomains (Auto-Generated via Script) #\n"
+output += "##########################################\n"
+output += "\n"
+
+def generate_virtual_server(name: str, port: int, error_root: str, has_host: bool):
+	result = ""
+
+	# HTTP
+	result += "server {\n"
+	result += "\tlisten 80;\n"
+	result += "\tlisten [::]:80;\n"
+	result += f"\tserver_name {name};\n"
+	result += "\treturn 308 https://$host$request_uri;\n"
+	result += "}\n"
+	result += "\n"
+
+	# HTTPS
+	result += "server {\n"
+	result += "\tlisten 443 ssl;\n"
+	result += "\tlisten [::]:443 ssl;\n"
+	result += f"\tserver_name {name};\n"
+	result += "\n"
+	result += "\tlocation / {\n"
+	result += f"\t\tproxy_pass http://localhost:{port};\n"
+
+	if has_host:
+		result += "\t\tproxy_set_header Host $host;\n"
+
+	result += "\t}\n"
+	result += "\n"
+	result += "\terror_page 502 /502.html;\n"
+	result += "\tlocation /502.html {\n"
+	result += f"\t\troot {error_root};\n"
+	result += "\t}\n"
+	result += "}\n"
+	result += "\n"
+
+	return result
+
+def generate_static_server(name: str, path: str):
+	result = ""
+
+	# HTTP
+	result += "server {\n"
+	result += "\tlisten 80;\n"
+	result += "\tlisten [::]:80;\n"
+	result += f"\tserver_name {name};\n"
+	result += "\treturn 308 https://$host$request_uri;\n"
+	result += "}\n"
+	result += "\n"
+
+	# HTTPS
+	result += "server {\n"
+	result += "\tlisten 443 ssl;\n"
+	result += "\tlisten [::]:443 ssl;\n"
+	result += f"\tserver_name {name};\n"
+	result += "\n"
+	result += f"\troot {path};\n"
+	result += "\tindex index.html;\n"
+	result += "\terror_page 404 /404.html;\n"
+	result += "}\n"
+	result += "\n"
+
+	return result
+
+# Write subdomain servers
+for subdomain in data["servers"]:
+	has_host = subdomain["host"] if "host" in subdomain else False
+
+	output += generate_virtual_server(subdomain["name"], subdomain["port"], data["error_root"], has_host)
+
+# Write subdomain static servers
+for subdomain in data["static"]:
+	output += generate_static_server(subdomain["name"], subdomain["path"])
+
+f = open("subdomains.conf", "w")
+f.write(output)
