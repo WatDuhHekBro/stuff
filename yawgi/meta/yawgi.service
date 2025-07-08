@@ -1,0 +1,5 @@
+[Service]
+ExecStart=/home/watduhhekbro/external/tmp/yawgi/yawgi
+
+[Install]
+WantedBy=multi-user.target
