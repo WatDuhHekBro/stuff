@@ -1,5 +1,5 @@
 const main = document.getElementById("main");
-const connection = new WebSocket("ws://zbound.duckdns.org:80/");
+const connection = new WebSocket(`ws://${window.location.host}/`);
 connection.onmessage = (message) => {
 	main.value = message.data;
 };

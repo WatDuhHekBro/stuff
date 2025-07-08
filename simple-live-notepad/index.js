@@ -31,8 +31,8 @@ require("uWebSockets.js")
 		}
 		res.writeStatus("200 OK").end(ret);
 	})
-	.listen(80, (listenSocket) => {
+	.listen(3000, (listenSocket) => {
 		if (listenSocket) {
-			console.log("Listening to port 80");
+			console.log("Listening to port 3000");
 		}
 	});

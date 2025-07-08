@@ -10,7 +10,7 @@
 	"author": "WatDuhHekBro",
 	"license": "MIT",
 	"dependencies": {
-		"uWebSockets.js": "uNetworking/uWebSockets.js#v18.14.0"
+		"uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.7.0"
 	},
 	"devDependencies": {
 		"prettier": "^2.2.1"
