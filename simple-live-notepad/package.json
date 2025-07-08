@@ -1,0 +1,18 @@
+{
+	"name": "simple-live-notepad",
+	"version": "1.0.0",
+	"description": "Simple live notepad via websockets",
+	"main": "index.js",
+	"scripts": {
+		"start": "node .",
+		"format": "prettier --write **/*"
+	},
+	"author": "WatDuhHekBro",
+	"license": "MIT",
+	"dependencies": {
+		"uWebSockets.js": "uNetworking/uWebSockets.js#v18.14.0"
+	},
+	"devDependencies": {
+		"prettier": "^2.2.1"
+	}
+}
